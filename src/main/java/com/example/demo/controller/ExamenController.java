@@ -16,6 +16,10 @@ import com.example.demo.service.ExamenService;
 
 @Controller
 public class ExamenController {
+
+	public ExamenController() {
+		// TODO Auto-generated constructor stub
+	}
 	
 	@Autowired
 	ExamenService service;

@@ -7,23 +7,42 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
+import org.springframework.web.servlet.ModelAndView;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import static org.assertj.core.api.Fail.fail;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.when;
 
+
+@RunWith(SpringRunner.class)
+@SpringBootTest
 @ExtendWith(MockitoExtension.class)
 public class ExamenControllerTest {
 
+
+    @Autowired
     ExamenController controller;
+
+    @Autowired
+    MockMvc mockmvc;
 
     @Mock
     private ExamenService service;
@@ -42,55 +61,70 @@ public class ExamenControllerTest {
         String route = "divisionChecker";
         String route2 = "ageChecker";
         String route3 = "error";
-        String route4 = null;
         assertEquals("divisionChecker", controller.navigate(route,model));
         assertEquals("ageChecker", controller.navigate(route2,model));
         assertEquals("error", controller.navigate(route3,model));
     }
 
 
+    @Test
     void TestAge() {
         Model model = new ExtendedModelMap();
-        Examen examen = new Examen();
-        Long age = 0L;
-        List<Examen> listaPrecreada = createMockedList();
-        when(service.ageChecker(examen.getFechaNacimiento(),new Date())).thenReturn(createMockedList());//listaPrecreada, puedes poner eso en vez de createMockedList, se pone para simplicar el codigo
+        Examen examen = new Examen(1,1, 1, new Date(2005, 0, 1));
+        assertEquals("under-Age", controller.age(examen,model));
 
-        try {
-            age = service.ageChecker(examen.getFechaNacimiento(),new Date())	;
-        } catch (Exception e) {
-            assertEquals("error", controller.age(examen,model));
-        }
-        if(age<18) {
-            assertEquals("underAge", controller.age(examen,model));
-        }else if (age > 18 && age < 67) {
-            assertEquals("getAJobNow", controller.age(examen,model));
-        }else if(age > 67) {
-            assertEquals("retired", controller.age(examen,model));
-        }
-        assertEquals("error", controller.age(examen,model));
+        Examen examen2 = new Examen(2,1, 1, new Date(1955, 0, 1));
+        assertEquals("getAJobNow", controller.age(examen2,model));
 
+        Examen examen3 = new Examen(3,1, 1, new Date(1950, 0, 1));
+        assertEquals("retired", controller.age(examen3,model));
 
     }
 
     private static List<Examen> createMockedList() {
-        List<Examen> listaPrecreada = new ArrayList<>();
-
+        List<Examen> listaCreada = new ArrayList<>();
         // Crear fechas de nacimiento
         Date date = new Date(2005, 0, 1);
         Date date2 = new Date(1955, 0, 1);
         Date date3 = new Date(1950, 0, 1);
 
         // Añadir objetos Examen a la lista con fechas de nacimiento
-        listaPrecreada.add(new Examen(null, null, date));
-        listaPrecreada.add(new Examen(null, null, date2));
-        listaPrecreada.add(new Examen(null, null, date3));
+        listaCreada.add(new Examen(null,null, null, date));
+        listaCreada.add(new Examen(null, null, null, date2));
+        listaCreada.add(new Examen(null, null, null, date3));
 
-        return listaPrecreada;
+        return listaCreada;
     }
 
     @Test
-    public void division() {
+    public void TestDivision() {
+        MockHttpServletRequestBuilder requestbuilder = MockMvcRequestBuilders.get("/divisionChecker").queryParam("dividendo", "10")
+                .queryParam("divisor", "2");
+        try {
+            MvcResult mvcresult = mockmvc.perform(requestbuilder).andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+            ModelAndView modelandview = mvcresult.getModelAndView();
+            assertEquals("resultOperation", modelandview.getViewName());
+            assertEquals(5, modelandview.getModel().get("msg"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No debería haber excepciones");
+
+        }
+
+    }
+
+    void testInsertarStudentForm(){
+        MockHttpServletRequestBuilder requestbuilder = MockMvcRequestBuilders.get("/insertStudent").queryParam("nombre", "Alberto")
+                .queryParam("apellido", "Garcia");;
+        try {
+            MvcResult mvcresult = mockmvc.perform(requestbuilder).andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+            ModelAndView modelandview = mvcresult.getModelAndView();
+            assertEquals("fin", modelandview.getViewName());
+            assertEquals("estudiantes", modelandview.getModel().get("estudiantes"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No debería haber excepciones");
+        }
     }
 
     @Test
