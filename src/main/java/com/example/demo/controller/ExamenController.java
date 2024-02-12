@@ -40,7 +40,6 @@ public class ExamenController {
 			return "error";
 		}
 
-				
 		if(age<18) {
 			return "underAge";
 		}else if (age > 18 && age < 67) {
