@@ -74,4 +74,8 @@ public class ExamenController {
 		return "index";
 	}
 
+	public void setService(ExamenService service) {
+		this.service = service;
+	}
+
 }
