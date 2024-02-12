@@ -10,7 +10,6 @@ import jakarta.persistence.Id;
 import lombok.Data;
 import lombok.Getter;
 
-@Data // con esto se hacen los getter y los setter
 @Getter
 @Entity
 public class Examen {
